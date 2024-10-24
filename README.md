@@ -1,2 +1,3 @@
 # pwnagotchi_wifi_switcher
-a pwnagotchi plugin that automatically detects and switches AI profiles and settings to and from an external wifi adapter
+
+A pwnagotchi plugin that automates the required changes necessary to switch from using the RPIs internal wifi to an externally connected wifi adapter. Still in testing so make backups of your brain files before using it for the first time.
