@@ -5,7 +5,6 @@ import pwnagotchi.plugins as plugins
 
 CONFIG_PATH = "/boot/config.txt"
 
-
 class external_wifi(plugins.Plugin):
     __author__ = "Allordacia"
     __version__ = "0.0.5"
@@ -119,37 +118,14 @@ class external_wifi(plugins.Plugin):
             
         except Exception as e:
             logging.info(f"Error modifying config file: {e}")
-    
-    # def switch_wifi_mode(self, enable_wifi=True):
-    #     #  Create backups for /root/brain.nn and /root/brain.json files based on the enable_wifi flag
-    #     if os.path.exists("/root/brain.nn") and os.path.exists("/root/brain.json"):
-    #         if enable_wifi:
-    #             if not os.path.exists("/root/brain.nn.external") and not os.path.exists("/root/brain.json.external"):
-    #                 os.system("sudo cp /root/brain.nn /root/brain.nn.internal")
-    #                 os.system("sudo cp /root/brain.json /root/brain.json.internal")
-    #                 os.system("sudo rm /root/brain.nn")
-    #                 os.system("sudo rm /root/brain.json")
-    #             # check if the external brain files exist and copy them to the root directory
-    #             else: 
-    #                 os.system("sudo cp /root/brain.nn /root/brain.nn.internal")
-    #                 os.system("sudo cp /root/brain.json /root/brain.json.internal")
-    #                 os.system("sudo cp /root/brain.nn.external /root/brain.nn")
-    #                 os.system("sudo cp /root/brain.json.external /root/brain.json")
 
-    #         else:
-    #             if not os.path.exists("/root/brain.nn.internal") and not os.path.exists("/root/brain.json.internal"):
-    #                 os.system("sudo cp /root/brain.nn /root/brain.nn.external")
-    #                 os.system("sudo cp /root/brain.json /root/brain.json.external")
-    #                 os.system("sudo rm /root/brain.nn")
-    #                 os.system("sudo rm /root/brain.json")
-    #             # check if the x brain files exist and copy them to the root directory
-    #             else: 
-    #                 os.system("sudo cp /root/brain.nn /root/brain.nn.external")
-    #                 os.system("sudo cp /root/brain.json /root/brain.json.external")
-    #                 os.system("sudo cp /root/brain.nn.internal /root/brain.nn")
-    #                 os.system("sudo cp /root/brain.json.internal /root/brain.json")    
+    def on_unload(self):
+        logging.info("[external_wifi] plugin unloaded")
+        os.system("sudo cp /root/brain.nn /root/brain.nn." + self.options['last_iface'])
+        os.system("sudo cp /root/brain.json /root/brain.json." + self.options['last_iface'])
 
-    #     # Update the config file to enable/disable internal Wi-Fi and dwc2
-    #     self.update_config(enable_wifi)   
-
-    # switch_wifi_mode(extAnt)
+    def on_epoch(self):
+        if self.ready:
+            logging.info("[external_wifi] plugin backing up brain files")
+            os.system("sudo cp /root/brain.nn /root/brain.nn." + self.options['last_iface'])
+            os.system("sudo cp /root/brain.json /root/brain.json." + self.options['last_iface'])
