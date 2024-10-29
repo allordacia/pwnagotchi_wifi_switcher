@@ -1,5 +1,8 @@
 import os
 import logging
+from pwnagotchi.ui.components import LabeledValue
+from pwnagotchi.ui.view import BLACK
+from pwnagotchi.ui import fonts
 import pwnagotchi
 import pwnagotchi.plugins as plugins
 
@@ -17,8 +20,6 @@ class external_wifi(plugins.Plugin):
         self.extAnt = None
 
     def on_loaded(self):
-        if 'use-external-wifi' not in self.options:
-            self.options['use-external-wifi'] = False
         if 'external_iface' not in self.options:
             self.options['external_iface'] = 'wlan1'
         if 'internal_iface' not in self.options:
@@ -27,24 +28,16 @@ class external_wifi(plugins.Plugin):
             self.options['last_iface'] = 'mon0'
 
         logging.info("[external_wifi] plugin loaded")
-        self.extAnt = self.options['use-external-wifi']
-
-    def on_config_changed(self, config):
-        self.config = config
-        self.ready = True
-        
-        logging.info(self.extAnt)
         
         # get a list of all the available wifi interfaces
         lst = os.listdir('/sys/class/net')
-        logging.info(lst)
 
         # check if the value of self.options['external_iface'] exists in the lst
         if self.options['external_iface'] in lst:
             logging.info("External wifi interface found")
+            self.extAnt = True
         else:
             logging.info("External wifi interface not found")
-            self.options['use-external-wifi'] = False
             self.extAnt = False
 
         if os.path.exists("/root/brain.nn") and os.path.exists("/root/brain.json"):
@@ -62,7 +55,6 @@ class external_wifi(plugins.Plugin):
                 logging.info("External brain files for this interface were not found. New ones will be created")
 
             self.options['last_iface'] = self.options['external_iface']
-            self.update_config(True)
         else:
             if os.path.exists("/root/brain.nn." + self.options['internal_iface']) and os.path.exists("/root/brain.json." + self.options['internal_iface']):
                 os.system("sudo cp /root/brain.nn." + self.options['internal_iface'] + " /root/brain.nn")
@@ -74,7 +66,8 @@ class external_wifi(plugins.Plugin):
                 os.system("sudo rm /root/brain.json")
 
             self.options['last_iface'] = self.options['internal_iface']    
-            self.update_config(False)        
+        
+        self.update_config(self.extAnt)
 
     def update_config(self, enable_wifi=True):
         try:
@@ -129,3 +122,15 @@ class external_wifi(plugins.Plugin):
             logging.info("[external_wifi] plugin backing up brain files")
             os.system("sudo cp /root/brain.nn /root/brain.nn." + self.options['last_iface'])
             os.system("sudo cp /root/brain.json /root/brain.json." + self.options['last_iface'])
+
+    def on_ui_setup(self, ui):
+        if self.extAnt:
+            ui.add_element('Ant', LabeledValue(color=BLACK, label='Y', value='', position=(ui.width() / 2 + 15, 0),
+                label_font=fonts.Bold, text_font=fonts.Medium))
+        else:
+            ui.add_element('Ant', LabeledValue(color=BLACK, label='|', value='', position=(ui.width() / 2 + 15, 0),
+                label_font=fonts.Bold, text_font=fonts.Medium))
+            
+    def on_unload(self, ui):
+        with ui._lock:
+            ui.remove_element('Ant')
